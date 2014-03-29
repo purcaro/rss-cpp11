@@ -10,7 +10,7 @@ HEADERS = $(call rwildcard, src/, *.h) \
 	$(call rwildcard, src/, *.hpp)
 SRC = -I../ -I$(RSS_PATH)/src
 
-BIN := bin/test
+BIN := bin/rss
 
 .PHONY: all
 all: $(OBJ_DIR) $(BIN)
@@ -27,9 +27,9 @@ $(BIN): $(OBJ)
 	$(CPP) -o $@ $^ $(LD_FLAGS)
 
 .PHONY : run
-run:
+run: all
 	@echo "******************** running ********************"
-	./a.out
+	./bin/rss
 	@echo "******************** done    ********************"
 
 .PHONY: clean

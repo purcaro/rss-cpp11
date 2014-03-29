@@ -3,15 +3,14 @@
 #include <iostream>
 #include "export_cfg.hpp"
 #include "Feed.hpp"
+#include <pugixml.hpp>
 
-int main(int argc, char* argv[]){
-    std::vector<std::string> args(argv, argv + argc);
-
+void parseRSS(std::string url){
     try
     {
         // init once per process, needed by xerces and curl
         FeedReader::Feed::Initialize();
-        FeedReader::Feed feedReader(args[1]);
+        FeedReader::Feed feedReader(url);
 
         // check feed - retrieves and parses results.
         // we can repeat this step as often as we wish to
@@ -48,6 +47,39 @@ int main(int argc, char* argv[]){
     catch (...)
     {
         std::cout << "Unknown exception." << "\n";
+    }
+}
+
+std::vector<std::string> parseOpml(){
+   pugi::xml_document doc;
+    auto result = doc.load_file("/home/mjp/Dropbox/rss/subscriptions.opml");
+    auto r = doc.select_nodes("//outline");
+
+    std::vector<std::string> urls;
+    for(const auto& xmlNode : r){
+        const auto& n = xmlNode.node();
+        if(std::string("rss") == n.attribute("type").value()){
+            auto url = n.attribute("htmlUrl").value();
+            if(std::string("") == url){
+                url = n.attribute("xmlUrl").value();
+            }
+            if(std::string("") == url){
+                std::cerr << "could not find url: " << std::endl;
+                n.print(std::cout);
+            }
+            urls.push_back(url);
+        }
+    }
+    return urls;
+}
+
+int main(int argc, char* argv[]){
+    std::vector<std::string> args(argv, argv + argc);
+
+    auto urls = parseOpml();
+    for(const auto& url : urls){
+        parseRSS(url);
+        break;
     }
 
     return 0;
